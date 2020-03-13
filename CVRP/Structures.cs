@@ -19,6 +19,7 @@ namespace CVRP
   {
     int v1, v2;
     int distance;
+    double pheromone;
 
     public Edge(int v1, int v2, int distance)
     {

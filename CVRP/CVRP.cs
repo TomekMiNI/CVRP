@@ -6,6 +6,12 @@ using System.Threading.Tasks;
 
 namespace CVRP
 {
+  public enum Type
+  {
+    Basic,
+    Rank,
+    EvaporationDecrease
+  }
   class CVRP
   {
     //we have
@@ -15,15 +21,45 @@ namespace CVRP
 
     //input graph, constant values
     //demands and distances
-    private Graph DataGraph { get; set; }
+    private Graph State { get; set; }
+    
+    private int MAX_ITER { get; }
 
-    //graph or just an array
-    //pheromones and changing demands (from max to 0, 0 means client served) ??
-    private Graph VarGraph { get; set; }
+    private int Amount { get; }
+
+    private double EvaporationFactor { get; }
+    private Type AlgorithmType { get; }
+    private int CountOfRankAnts { get; }
 
     public Solution Run()
     {
+
+      //MAX_ITER iterations
+      for (int i = 0; i < MAX_ITER; i++)
+      {
+        for (int ant = 0; ant < Amount; ant++)
+        {
+          FindSolution(ant);
+        }
+        CorrectPheromones(AlgorithmType);
+      }
+
+
       return new Solution();
+    }
+
+    public Solution FindSolution(int ant)
+    {
+      Solution solution = new Solution();
+
+
+
+      return solution;
+    }
+
+    public void CorrectPheromones(Type type)
+    {
+
     }
   }
 }
