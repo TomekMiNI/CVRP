@@ -9,16 +9,23 @@ namespace CVRP
   class Graph
   {
     int[] vertices;
-    int[,] edges;
+    Edge[,] edges;
 
     public int this[int i] => vertices[i];
-    public int this[int i, int j] => edges[i, j];
+    public Edge this[int i, int j] => edges[Math.Min(i, j), Math.Max(i,j)]; //upper
   }
 
   class Edge
   {
     int v1, v2;
-    int val;
+    int distance;
+
+    public Edge(int v1, int v2, int distance)
+    {
+        this.v1 = v1;
+        this.v2 = v2;
+        this.distance = distance;
+    }
 
     public override string ToString()
     {
@@ -36,7 +43,7 @@ namespace CVRP
     }
   }
 
-  class Path
+  class Solution
   {
     List<Route> path;
     public override string ToString()

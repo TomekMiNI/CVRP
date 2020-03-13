@@ -26,7 +26,6 @@ namespace CVRP
     //every edge has pheromone equals 0
     //we need to remember last chosen path of every ant to correct pheromone
     //also current best solution
-    //thread per each ant
 
     ///
     /// </summary>

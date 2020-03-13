@@ -8,9 +8,9 @@ namespace CVRP
 {
   class Greedy
   {
-    public Path Run()
+    public Solution Run()
     {
-      return new Path();
+      return new Solution();
     }
   }
 }
