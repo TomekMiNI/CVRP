@@ -18,7 +18,7 @@ namespace CVRP
         return edges[Math.Min(i, j), Math.Max(i, j)]; //upper
       }
       set {
-        edges[i, j] = value;
+        edges[Math.Min(i, j), Math.Max(i, j)] = value;
       }
     }
 
@@ -27,7 +27,7 @@ namespace CVRP
     /// </summary>
     /// <param name="size"></param>
     /// <param name="distances"></param>
-    /// <param name="pheromones">If null every edge starts with pheromone equals 0</param>
+    /// <param name="pheromones">If null every edge starts with pheromone equal to 0</param>
     public Graph(int size, int[,] distances, double[,] pheromones = null)
     {
       vertices = new int[size];
@@ -38,6 +38,14 @@ namespace CVRP
         for (int j = i + 1; j < size; j++)
           edges[i, j] = new Edge(i, j, distances[i, j], pheromones[i, j]);
     }
+
+	public Graph(int size)
+	{
+	  vertices = new int[size];
+	  for (int i = 0; i < size - 1; i++)
+		for (int j = i + 1; j < size; j++)
+		  edges[i, j] = new Edge(i, j, 0, 0);
+	}
   }
 
   public class Vertice
@@ -78,7 +86,7 @@ namespace CVRP
 
     public override string ToString()
     {
-      return string.Format("<{0}, {1}>", Math.Min(v1, v2), Math.Max(v1, v2));
+      return string.Format("<{0}, {1}>", Math.Min(V1, V2), Math.Max(V1, V2));
     }
   }
 

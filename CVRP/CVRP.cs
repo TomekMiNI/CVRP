@@ -129,7 +129,7 @@ namespace CVRP
     public void UpdatePheromones(Solution[] solutions)
     {
       double constW = CountOfAnts; //??
-      double[,] pheromonesIncrease = new double[CountOfVertices, CountOfVertices];
+      Graph pheromonesIncrease = new Graph(CountOfVertices);
 
       //leaving pheromone
       foreach (var sol in solutions)
@@ -139,8 +139,7 @@ namespace CVRP
           foreach (var edge in route.Edges)
           {
             double val = constW / sol.Value;
-            pheromonesIncrease[edge.V1, edge.V1] += val;
-            pheromonesIncrease[edge.V2, edge.V2] += val;
+			pheromonesIncrease[edge.V1, edge.V2].Pheromone += val;
           }
         }
       }
@@ -148,7 +147,7 @@ namespace CVRP
       //evaporation and pheromone increase
       for (int i = 0; i < CountOfVertices - 1; i++)
         for (int j = i + 1; j < CountOfVertices; j++)
-          State[i, j].Pheromone = State[i, j].Pheromone * EvaporationFactor + pheromonesIncrease[i, j];
+          State[i, j].Pheromone = State[i, j].Pheromone * EvaporationFactor + pheromonesIncrease[i, j].Pheromone;
     }
   }
 }
