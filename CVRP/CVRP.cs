@@ -38,7 +38,7 @@ namespace CVRP
     /// <summary>
     /// Each ant has the same capacity
     /// </summary>
-    private double Capacity { get; }
+    private int Capacity { get; }
 
     /// <summary>
     /// Count of vertices
@@ -57,17 +57,18 @@ namespace CVRP
     private Type AlgorithmType { get; }
     private int CountOfRankAnts { get; }
 
-    public CVRP(int countOfAnts, int maxIter, double evaporationFactor, int[,] distances, double alpha, double beta, double[,] pheromones = null)
+    public CVRP(int countOfAnts, int maxIter, double evaporationFactor, int[,] distances, int capacity, int[] demands, double alpha, double beta, double[,] pheromones = null)
     {
       CountOfAnts = countOfAnts;
       MaxIter = maxIter;
       EvaporationFactor = evaporationFactor;
       CountOfVertices = CountOfAnts + 1;
+      Capacity = capacity;
 
       Alpha = alpha;
       Beta = beta;
 
-      State = new Graph(CountOfVertices, distances, pheromones);
+      State = new Graph(CountOfVertices, distances, demands, pheromones);
     }
 
     public Solution Run()
@@ -101,15 +102,18 @@ namespace CVRP
       int alreadyVisited = 1;
 
       int start = ant + 1;
+      int currentCapacity = Capacity;
+
+      Route route = new Route();
 
       while(alreadyVisited < CountOfAnts)
       {
         //1. phase: Choosing next vertice to visit
         double currentMax = 0;
-        int currentWinner = -1;
-        //We avoid depot. We go there when we have no other option
+        int currentWinner = 0;
+        //Until we have capacity we do not choose depot (vertice 0)
         for(int i = 1; i < CountOfVertices; i++)
-          if(!alreadyVisitedArr[i])
+          if(!alreadyVisitedArr[i] && State[i] <= currentCapacity)
           {
             double candidate = Math.Pow(State[start, i].Pheromone, Alpha) * Math.Pow(State[start, i].Distance, Beta);
             if(candidate > currentMax)
@@ -119,9 +123,29 @@ namespace CVRP
             }
           }
 
+
         //next vertice chosen
+        route.Add(new Edge(start, currentWinner, State[start, currentWinner].Distance, 0));
+
+        if(currentWinner != 0)
+        {
+          currentCapacity -= State[currentWinner];
+          alreadyVisited++;
+          alreadyVisitedArr[currentWinner] = true;
+        }
+        //back to depot
+        else
+        {
+          currentCapacity = Capacity;
+          solution.Add(route);
+          route = new Route();
+        }
         start = currentWinner;
       }
+
+      //last edge to base
+      route.Add(new Edge(start, 0, State[start, 0].Distance, 0));
+      solution.Add(route);
 
       return solution;
     }

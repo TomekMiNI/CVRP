@@ -8,10 +8,10 @@ namespace CVRP
 {
   class Graph
   {
-    int[] vertices;
+    int[] demands;
     Edge[,] edges;
 
-    public int this[int i] => vertices[i];
+    public int this[int i] => demands[i];
     public Edge this[int i, int j]
     {
       get {
@@ -28,9 +28,9 @@ namespace CVRP
     /// <param name="size"></param>
     /// <param name="distances"></param>
     /// <param name="pheromones">If null every edge starts with pheromone equal to 0</param>
-    public Graph(int size, int[,] distances, double[,] pheromones = null)
+    public Graph(int size, int[,] distances, int[] demands, double[,] pheromones = null)
     {
-      vertices = new int[size];
+      this.demands = demands;
       if (pheromones == null)
         pheromones = new double[size, size];
       edges = new Edge[size, size];
@@ -41,23 +41,11 @@ namespace CVRP
 
 	public Graph(int size)
 	{
-	  vertices = new int[size];
+	  demands = new int[size];
 	  for (int i = 0; i < size - 1; i++)
 		for (int j = i + 1; j < size; j++)
 		  edges[i, j] = new Edge(i, j, 0, 0);
 	}
-  }
-
-  public class Vertice
-  {
-    public int Id { get; }
-    public int Demand { get; }
-
-    public Vertice(int id, int demand)
-    {
-      Id = id;
-      Demand = demand;
-    }
   }
 
   public class Edge
@@ -68,7 +56,7 @@ namespace CVRP
     public int V1 { get; set; }
     public int V2 { get; set; }
     /// <summary>
-    /// Euclidean distance between vertices with indexes v1 and v2
+    /// Euclidean distance between demands with indexes v1 and v2
     /// </summary>
     public int Distance { get; set; }
     /// <summary>
@@ -93,6 +81,12 @@ namespace CVRP
   class Route
   {
     public List<Edge> Edges;
+    public int Value => Edges.Sum(e => e.Distance);
+
+    public void Add(Edge e)
+    {
+      Edges.Add(e);
+    }
 
     public override string ToString()
     {
@@ -107,7 +101,12 @@ namespace CVRP
   class Solution : IComparable<Solution>
   {
     public List<Route> Routes;
-    public int Value;
+    public int Value => Routes.Sum(r => r.Value);
+
+    public void Add(Route route)
+    {
+      Routes.Add(route);
+    }
 
     public int CompareTo(Solution other)
     {
@@ -121,5 +120,6 @@ namespace CVRP
       return sb.ToString();
     }
   }
+  
   
 }
