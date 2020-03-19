@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 namespace CVRP
 {
-  class Graph
+  public class Graph
   {
     int[] demands;
     Edge[,] edges;
 
+	public int vertexCount { get; private set;}
     public int this[int i] => demands[i];
     public Edge this[int i, int j]
     {
@@ -28,8 +29,9 @@ namespace CVRP
     /// <param name="size"></param>
     /// <param name="distances"></param>
     /// <param name="pheromones">If null every edge starts with pheromone equal to 0</param>
-    public Graph(int size, int[,] distances, int[] demands, double[,] pheromones = null)
+    public Graph(int size, double[,] distances, int[] demands, double[,] pheromones = null)
     {
+	  vertexCount = size;
       this.demands = demands;
       if (pheromones == null)
         pheromones = new double[size, size];
@@ -41,7 +43,9 @@ namespace CVRP
 
 	public Graph(int size)
 	{
+	  vertexCount = size;
 	  demands = new int[size];
+	  edges = new Edge[size, size];
 	  for (int i = 0; i < size - 1; i++)
 		for (int j = i + 1; j < size; j++)
 		  edges[i, j] = new Edge(i, j, 0, 0);
@@ -58,13 +62,13 @@ namespace CVRP
     /// <summary>
     /// Euclidean distance between demands with indexes v1 and v2
     /// </summary>
-    public int Distance { get; set; }
+    public double Distance { get; set; }
     /// <summary>
     /// current pheromone value
     /// </summary>
     public double Pheromone { get; set; }
 
-    public Edge(int v1, int v2, int distance, double pheromone)
+    public Edge(int v1, int v2, double distance, double pheromone)
     {
       V1 = v1;
       V2 = v2;
@@ -78,10 +82,10 @@ namespace CVRP
     }
   }
 
-  class Route
+  public class Route
   {
-    public List<Edge> Edges;
-    public int Value => Edges.Sum(e => e.Distance);
+    public List<Edge> Edges = new List<Edge>();
+    public double Value => Edges.Sum(e => e.Distance);
 
     public void Add(Edge e)
     {
@@ -100,8 +104,8 @@ namespace CVRP
 
   class Solution : IComparable<Solution>
   {
-    public List<Route> Routes;
-    public int Value => Routes.Sum(r => r.Value);
+    public List<Route> Routes = new List<Route>();
+    public double Value => Routes.Sum(r => r.Value);
 
     public void Add(Route route)
     {
@@ -110,13 +114,16 @@ namespace CVRP
 
     public int CompareTo(Solution other)
     {
-      return Value < other.Value ? 1 : -1;
+	  if (Value == other.Value)
+		return 0;
+      return Value < other.Value ? -1 : 1;
     }
 
     public override string ToString()
     {
       StringBuilder sb = new StringBuilder();
       Routes.ForEach(r => sb.AppendLine(r.ToString()));
+	  sb.AppendLine("Best solution value: " + Value.ToString());
       return sb.ToString();
     }
   }

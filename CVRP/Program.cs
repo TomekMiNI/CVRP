@@ -32,15 +32,15 @@ namespace CVRP
     /// <param name="args"></param>
     static void Main(string[] args)
     {
-      if (args.Length != 2)
-        throw new Exception("we need path to data file!");
+      //if (args.Length != 2)
+      //  throw new Exception("we need path to data file!");
 
-      ReadFromFile(args[1]);
+      //ReadFromFile(args[1]);
 
       //initialization
       //get data from file
 
-      CVRP algorithm = new CVRP();
+      CVRP algorithm = new CVRP(1000, 0.75, 5, 5, @"C:\MiniProjects\CVRP\CVRP\Instances\SetA\Problems\A-n32-k5.vrp");
       var solution = algorithm.Run();
 
       Console.WriteLine(solution);

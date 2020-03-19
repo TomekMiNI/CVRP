@@ -14,15 +14,17 @@ namespace CVRP
   }
   class CVRP
   {
-    //we have
-    //basic correction
-    //rank correction
-    //evaporation decrease correction
+	private const double evalutaionMinimum = 0.00001;
+	private double evalutaionMax { get { return Double.MaxValue / (CountOfVertices * 100); } }
+	//we have
+	//basic correction
+	//rank correction
+	//evaporation decrease correction
 
-    /// <summary>
-    /// Current state 
-    /// </summary>
-    private Graph State { get; set; }
+	/// <summary>
+	/// Current state 
+	/// </summary>
+	private Graph GraphState { get; set; }
     /// <summary>
     /// Max number of iterations
     /// </summary>
@@ -53,27 +55,27 @@ namespace CVRP
     /// </summary>
     private double Beta { get; }
 
+	private Random Generator { get; }
+
     //modifications
     private Type AlgorithmType { get; }
     private int CountOfRankAnts { get; }
 
-    public CVRP(int countOfAnts, int maxIter, double evaporationFactor, int[,] distances, int capacity, int[] demands, double alpha, double beta, double[,] pheromones = null)
+    public CVRP(int maxIter, double evaporationFactor, double alpha, double beta, string filePath, double[,] pheromones = null)
     {
-      CountOfAnts = countOfAnts;
       MaxIter = maxIter;
       EvaporationFactor = evaporationFactor;
-      CountOfVertices = CountOfAnts + 1;
-      Capacity = capacity;
-
       Alpha = alpha;
       Beta = beta;
+	  (GraphState, Capacity) = Utilities.ReadInputCvrp(filePath);
+	  CountOfVertices = GraphState.vertexCount;
+	  CountOfAnts = CountOfVertices - 1;
+	  Generator = new Random(123);
+	}
 
-      State = new Graph(CountOfVertices, distances, demands, pheromones);
-    }
-
-    public Solution Run()
+	public Solution Run()
     {
-      var bestSolution = new Solution();
+	  Solution bestSolution = null;
       //MAX_ITER iterations
       for (int i = 0; i < MaxIter; i++)
       {
@@ -84,10 +86,10 @@ namespace CVRP
         }
         var minLocalSolution = solutions.Min();
 
-        if (minLocalSolution.Value < bestSolution.Value)
-          bestSolution = minLocalSolution;
+        if (bestSolution == null || minLocalSolution.Value < bestSolution.Value)
+		  bestSolution = minLocalSolution;
 
-        UpdatePheromones(solutions);
+		UpdatePheromones(solutions);
       }
       return bestSolution;
     }
@@ -97,60 +99,111 @@ namespace CVRP
       Solution solution = new Solution();
 
       bool[] alreadyVisitedArr = new bool[CountOfVertices];
-      //ant starts in [ant + 1]th vertice in GRAPH [0 is a depot]
-      alreadyVisitedArr[ant + 1] = true;
+	  int start = ant + 1;
+	  //ant starts in [ant + 1]th vertice in GRAPH [0 is a depot]
+	  alreadyVisitedArr[start] = true;
+
       int alreadyVisited = 1;
-
-      int start = ant + 1;
       int currentCapacity = Capacity;
-
       Route route = new Route();
 
-      while(alreadyVisited < CountOfAnts)
-      {
-        //1. phase: Choosing next vertice to visit
-        double currentMax = 0;
-        int currentWinner = 0;
-        //Until we have capacity we do not choose depot (vertice 0)
-        for(int i = 1; i < CountOfVertices; i++)
-          if(!alreadyVisitedArr[i] && State[i] <= currentCapacity)
-          {
-            double candidate = Math.Pow(State[start, i].Pheromone, Alpha) * Math.Pow(State[start, i].Distance, Beta);
-            if(candidate > currentMax)
-            {
-              currentMax = candidate;
-              currentWinner = i;
-            }
-          }
+      while(alreadyVisited < CountOfVertices - 1)
+	  {
+		//1. phase: Choosing next vertice to visit
+		//double bestEvaluation = 0;
+		//int nextVertex = 0;
+		//Until we have capacity we do not choose depot (vertex 0)
+		//for (int i = 1; i < CountOfVertices; i++)
+		//  if (!alreadyVisitedArr[i] && i != start && GraphState[i] <= currentCapacity)
+		//  {
+		//	double currentEvaluation = Math.Pow(GraphState[start, i].Pheromone, Alpha) * 1 / Math.Pow(GraphState[start, i].Distance, Beta);
 
+		//	if (currentEvaluation > bestEvaluation)
+		//	{
+		//	  bestEvaluation = currentEvaluation;
+		//	  nextVertex = i;
+		//	}
+		//  }
 
-        //next vertice chosen
-        route.Add(new Edge(start, currentWinner, State[start, currentWinner].Distance, 0));
+		double[] rouletteWheel = CalculateProbabilities(alreadyVisitedArr, start, currentCapacity);
+		int nextVertex = CountOfVertices - 1;
+		if (rouletteWheel != null)
+		{
+		  var p = Generator.NextDouble();
+		  for (int i = 0; i < CountOfVertices; i++)
+		  {
+			if (p < rouletteWheel[i])
+			{
+			  nextVertex = i;
+			  break;
+			}
+		  }
+		}
+		else
+		{
+		  nextVertex = 0;
+		}
+		
 
-        if(currentWinner != 0)
-        {
-          currentCapacity -= State[currentWinner];
-          alreadyVisited++;
-          alreadyVisitedArr[currentWinner] = true;
-        }
-        //back to depot
-        else
-        {
-          currentCapacity = Capacity;
-          solution.Add(route);
-          route = new Route();
-        }
-        start = currentWinner;
-      }
+		//next vertice chosen
+		route.Add(new Edge(start, nextVertex, GraphState[start, nextVertex].Distance, 0));
 
-      //last edge to base
-      route.Add(new Edge(start, 0, State[start, 0].Distance, 0));
+		if (nextVertex != 0)
+		{
+		  currentCapacity -= GraphState[nextVertex];
+		  alreadyVisited++;
+		  alreadyVisitedArr[nextVertex] = true;
+		}
+		//back to depot
+		else
+		{
+		  currentCapacity = Capacity;
+		  solution.Add(route);
+		  route = new Route();
+		}
+		start = nextVertex;
+	  }
+
+	  //last edge to base
+	  route.Add(new Edge(start, 0, GraphState[start, 0].Distance, 0));
       solution.Add(route);
 
       return solution;
     }
 
-    public void UpdatePheromones(Solution[] solutions)
+	private double[] CalculateProbabilities(bool[] alreadyVisitedArr, int start, int currentCapacity)
+	{
+	  double[] rouletteWheel = new double[CountOfVertices];
+	  for (int i = 1; i < CountOfVertices; i++)
+	  {
+		rouletteWheel[i] = rouletteWheel[i - 1];
+		if (!alreadyVisitedArr[i] && i != start && GraphState[i] <= currentCapacity)
+		{
+		  var evalutaion = Math.Pow(GraphState[start, i].Pheromone, Alpha) * 1 / Math.Pow(GraphState[start, i].Distance, Beta);
+		  if (evalutaion < evalutaionMinimum)
+			evalutaion = evalutaionMinimum;
+		  if (evalutaion > evalutaionMax)
+			evalutaion = evalutaionMax;
+		  rouletteWheel[i] += evalutaion;
+		}
+	  }
+	  if(rouletteWheel.Last() > evalutaionMinimum / 10)
+	  {
+		for (int i = 0; i < CountOfVertices; i++)
+		{
+		  rouletteWheel[i] = rouletteWheel[i] / rouletteWheel.Last();
+		}
+	  }
+	  else
+	  {
+		return null;
+	  }
+	  
+
+	  return rouletteWheel;
+	}
+
+	public void UpdatePheromones(Solution[] solutions)
     {
       double constW = CountOfAnts; //??
       Graph pheromonesIncrease = new Graph(CountOfVertices);
@@ -171,7 +224,7 @@ namespace CVRP
       //evaporation and pheromone increase
       for (int i = 0; i < CountOfVertices - 1; i++)
         for (int j = i + 1; j < CountOfVertices; j++)
-          State[i, j].Pheromone = State[i, j].Pheromone * EvaporationFactor + pheromonesIncrease[i, j].Pheromone;
+          GraphState[i, j].Pheromone = GraphState[i, j].Pheromone * EvaporationFactor + pheromonesIncrease[i, j].Pheromone;
     }
   }
 }
