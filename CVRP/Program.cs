@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace CVRP
 {
@@ -32,18 +33,39 @@ namespace CVRP
     /// <param name="args"></param>
     static void Main(string[] args)
     {
-      //if (args.Length != 2)
-      //  throw new Exception("we need path to data file!");
+      //to save solutions in file
+      StringBuilder output = new StringBuilder();
+      string problemDirectory = @"..\..\Instances\SetA\Problems\";
+      string solutionDirectory = @"..\..\Instances\SetA\Solutions\";
+      string file = "A-n80-k10";
+      string fileWithExtension = file + ".vrp";
+      string filepath = problemDirectory + fileWithExtension;
+      output.AppendLine(file);
 
-      //ReadFromFile(args[1]);
+      bool baseVariant = true;
+      int maxIter = 2000;
+      output.AppendLine($"Max iterations = {maxIter}");
+      //rank variant
+      int countOfElite = 10;
+      output.AppendLine($"Rank variant E={countOfElite}");
 
-      //initialization
-      //get data from file
+      CVRP algorithm = new CVRP(maxIter, 0.75, 5, 5, filepath, Type.Rank, countOfElite);
+      var solution = algorithm.Run(output);
+      Console.Write(solution);
 
-      CVRP algorithm = new CVRP(1000, 0.75, 5, 5, @"C:\MiniProjects\CVRP\CVRP\Instances\SetA\Problems\A-n32-k5.vrp");
-      var solution = algorithm.Run();
+      if (baseVariant)
+      {
+        output.AppendLine("Base variant");
+        algorithm = new CVRP(maxIter, 0.75, 5, 5, filepath);
+        solution = algorithm.Run(output);
+        Console.WriteLine(solution);
+      }
+      string path = @"..\..\Instances\SetA\Results\" + file + "[" + countOfElite + "][iter" + maxIter + "].txt";
 
-      Console.WriteLine(solution);
+      //overwrite
+      output.AppendLine(File.ReadLines(solutionDirectory + file + ".sol").Last());
+      File.WriteAllText(path, output.ToString());
+      
     }
 
     static void ReadFromFile(string path)

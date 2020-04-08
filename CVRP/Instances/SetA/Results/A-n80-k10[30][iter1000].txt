@@ -1,0 +1,11 @@
+A-n80-k10
+Max iterations = 1000
+Rank variant E=30
+1 Best solution value: 2232,85051230267
+2 Best solution value: 2123,88961908855
+3 Best solution value: 2118,07437147181
+9 Best solution value: 2065,93914332172
+Base variant
+1 Best solution value: 2232,85051230267
+2 Best solution value: 2123,88961908855
+cost 1763

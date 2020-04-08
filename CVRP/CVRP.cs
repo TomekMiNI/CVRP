@@ -54,28 +54,41 @@ namespace CVRP
     /// Weight of distance
     /// </summary>
     private double Beta { get; }
-
+    /// <summary>
+    /// Variant of algorithm
+    /// </summary>
+    private Type Variant { get; set; } = Type.Basic;
+    /// <summary>
+    /// Variant Rank
+    /// </summary>
+    private int CountOfElite { get; }
 	private Random Generator { get; }
 
     //modifications
     private Type AlgorithmType { get; }
     private int CountOfRankAnts { get; }
 
-    public CVRP(int maxIter, double evaporationFactor, double alpha, double beta, string filePath, double[,] pheromones = null)
+    public CVRP(int maxIter, double evaporationFactor, double alpha, double beta, string filePath, Type? variant = Type.Basic, int? countOfElite = 10)
     {
       MaxIter = maxIter;
       EvaporationFactor = evaporationFactor;
       Alpha = alpha;
       Beta = beta;
-	  (GraphState, Capacity) = Utilities.ReadInputCvrp(filePath);
-	  CountOfVertices = GraphState.vertexCount;
-	  CountOfAnts = CountOfVertices - 1;
-	  Generator = new Random(123);
+	    (GraphState, Capacity) = Utilities.ReadInputCvrp(filePath);
+	    CountOfVertices = GraphState.vertexCount;
+	    CountOfAnts = CountOfVertices - 1;
+	    Generator = new Random(123);
+      if (variant == Type.Rank)
+      {
+        Variant = (Type)variant;
+        CountOfElite = (int)countOfElite;
+      }
 	}
 
-	public Solution Run()
+	  public Solution Run(StringBuilder output)
     {
-	  Solution bestSolution = null;
+	    Solution bestSolution = null;
+      bool better = false;
       //MAX_ITER iterations
       for (int i = 0; i < MaxIter; i++)
       {
@@ -87,9 +100,19 @@ namespace CVRP
         var minLocalSolution = solutions.Min();
 
         if (bestSolution == null || minLocalSolution.Value < bestSolution.Value)
-		  bestSolution = minLocalSolution;
+        {
+          bestSolution = minLocalSolution;
+          better = true;
+        }
 
-		UpdatePheromones(solutions);
+		    UpdatePheromones(solutions);
+        if (better)
+        {
+          string sol = $"{i + 1} {bestSolution}";
+          Console.Write(sol);
+          output.Append(sol);
+        }
+        better = false;
       }
       return bestSolution;
     }
@@ -109,40 +132,24 @@ namespace CVRP
 
       while(alreadyVisited < CountOfVertices - 1)
 	  {
-		//1. phase: Choosing next vertice to visit
-		//double bestEvaluation = 0;
-		//int nextVertex = 0;
-		//Until we have capacity we do not choose depot (vertex 0)
-		//for (int i = 1; i < CountOfVertices; i++)
-		//  if (!alreadyVisitedArr[i] && i != start && GraphState[i] <= currentCapacity)
-		//  {
-		//	double currentEvaluation = Math.Pow(GraphState[start, i].Pheromone, Alpha) * 1 / Math.Pow(GraphState[start, i].Distance, Beta);
-
-		//	if (currentEvaluation > bestEvaluation)
-		//	{
-		//	  bestEvaluation = currentEvaluation;
-		//	  nextVertex = i;
-		//	}
-		//  }
-
-		double[] rouletteWheel = CalculateProbabilities(alreadyVisitedArr, start, currentCapacity);
-		int nextVertex = CountOfVertices - 1;
-		if (rouletteWheel != null)
-		{
-		  var p = Generator.NextDouble();
-		  for (int i = 0; i < CountOfVertices; i++)
+		  double[] rouletteWheel = CalculateProbabilities(alreadyVisitedArr, start, currentCapacity);
+		  int nextVertex = CountOfVertices - 1;
+		  if (rouletteWheel != null)
 		  {
-			if (p < rouletteWheel[i])
-			{
-			  nextVertex = i;
-			  break;
-			}
+		    var p = Generator.NextDouble();
+		    for (int i = 0; i < CountOfVertices; i++)
+		    {
+			    if (p < rouletteWheel[i])
+			    {
+			      nextVertex = i;
+			      break;
+			    }
+		    }
 		  }
-		}
-		else
-		{
-		  nextVertex = 0;
-		}
+		  else
+		  {
+		    nextVertex = 0;
+		  }
 		
 
 		//next vertice chosen
@@ -176,27 +183,27 @@ namespace CVRP
 	  double[] rouletteWheel = new double[CountOfVertices];
 	  for (int i = 1; i < CountOfVertices; i++)
 	  {
-		rouletteWheel[i] = rouletteWheel[i - 1];
-		if (!alreadyVisitedArr[i] && i != start && GraphState[i] <= currentCapacity)
-		{
-		  var evalutaion = Math.Pow(GraphState[start, i].Pheromone, Alpha) * 1 / Math.Pow(GraphState[start, i].Distance, Beta);
-		  if (evalutaion < evalutaionMinimum)
-			evalutaion = evalutaionMinimum;
-		  if (evalutaion > evalutaionMax)
-			evalutaion = evalutaionMax;
-		  rouletteWheel[i] += evalutaion;
-		}
+		  rouletteWheel[i] = rouletteWheel[i - 1];
+		  if (!alreadyVisitedArr[i] && i != start && GraphState[i] <= currentCapacity)
+		  {
+		    var evalutaion = Math.Pow(GraphState[start, i].Pheromone, Alpha) * 1 / Math.Pow(GraphState[start, i].Distance, Beta);
+		    if (evalutaion < evalutaionMinimum)
+			  evalutaion = evalutaionMinimum;
+		    if (evalutaion > evalutaionMax)
+			  evalutaion = evalutaionMax;
+		    rouletteWheel[i] += evalutaion;
+		  }
 	  }
 	  if(rouletteWheel.Last() > evalutaionMinimum / 10)
 	  {
-		for (int i = 0; i < CountOfVertices; i++)
-		{
-		  rouletteWheel[i] = rouletteWheel[i] / rouletteWheel.Last();
-		}
+		  for (int i = 0; i < CountOfVertices; i++)
+		  {
+		    rouletteWheel[i] /= rouletteWheel.Last();
+		  }
 	  }
 	  else
 	  {
-		return null;
+		  return null;
 	  }
 	  
 
@@ -207,16 +214,23 @@ namespace CVRP
     {
       double constW = CountOfAnts; //??
       Graph pheromonesIncrease = new Graph(CountOfVertices);
-
-      //leaving pheromone
-      foreach (var sol in solutions)
+      int countToUpdate = solutions.Count();
+      if(Variant == Type.Rank)
       {
-        foreach (var route in sol.Routes)
+        countToUpdate = CountOfElite;
+        var solutionsList = solutions.ToList();
+        solutionsList.Sort();
+        solutions = solutionsList.ToArray();
+      }
+      //leaving pheromone
+      for(int i = 0; i < countToUpdate; i++)
+      {
+        foreach (var route in solutions[i].Routes)
         {
           foreach (var edge in route.Edges)
           {
-            double val = constW / sol.Value;
-			pheromonesIncrease[edge.V1, edge.V2].Pheromone += val;
+            double val = constW / solutions[i].Value;
+			      pheromonesIncrease[edge.V1, edge.V2].Pheromone += val;
           }
         }
       }
