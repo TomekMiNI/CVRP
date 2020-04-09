@@ -10,7 +10,7 @@ namespace CVRP
   {
     Basic,
     Rank,
-    EvaporationDecrease
+    Evaporation
   }
   class CVRP
   {
@@ -59,16 +59,17 @@ namespace CVRP
     /// </summary>
     private Type Variant { get; set; } = Type.Basic;
     /// <summary>
-    /// Variant Rank
+    /// Rank Variant - count of elite
+    /// Evaporationa Variant - evaporation extra factor
     /// </summary>
-    private int CountOfElite { get; }
+    private int ModificationFactor { get; }
 	private Random Generator { get; }
 
     //modifications
     private Type AlgorithmType { get; }
     private int CountOfRankAnts { get; }
 
-    public CVRP(int maxIter, double evaporationFactor, double alpha, double beta, string filePath, Type? variant = Type.Basic, int? countOfElite = 10)
+    public CVRP(int maxIter, double evaporationFactor, double alpha, double beta, string filePath, Type? variant = Type.Basic, int? modificationFactor = 10)
     {
       MaxIter = maxIter;
       EvaporationFactor = evaporationFactor;
@@ -81,7 +82,7 @@ namespace CVRP
       if (variant == Type.Rank)
       {
         Variant = (Type)variant;
-        CountOfElite = (int)countOfElite;
+        ModificationFactor = (int)modificationFactor;
       }
 	}
 
@@ -215,12 +216,18 @@ namespace CVRP
       double constW = CountOfAnts; //??
       Graph pheromonesIncrease = new Graph(CountOfVertices);
       int countToUpdate = solutions.Count();
+      double evaporationFactor = EvaporationFactor;
       if(Variant == Type.Rank)
       {
-        countToUpdate = CountOfElite;
+        countToUpdate = ModificationFactor;
         var solutionsList = solutions.ToList();
         solutionsList.Sort();
         solutions = solutionsList.ToArray();
+      }
+      if(Variant == Type.Evaporation)
+      {
+        double average = solutions.Sum(s => s.Value) / solutions.Count();
+        evaporationFactor += ModificationFactor / average;
       }
       //leaving pheromone
       for(int i = 0; i < countToUpdate; i++)
@@ -238,7 +245,7 @@ namespace CVRP
       //evaporation and pheromone increase
       for (int i = 0; i < CountOfVertices - 1; i++)
         for (int j = i + 1; j < CountOfVertices; j++)
-          GraphState[i, j].Pheromone = GraphState[i, j].Pheromone * EvaporationFactor + pheromonesIncrease[i, j].Pheromone;
+          GraphState[i, j].Pheromone = GraphState[i, j].Pheromone * evaporationFactor + pheromonesIncrease[i, j].Pheromone;
     }
   }
 }

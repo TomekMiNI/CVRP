@@ -45,11 +45,17 @@ namespace CVRP
       bool baseVariant = true;
       int maxIter = 2000;
       output.AppendLine($"Max iterations = {maxIter}");
-      //rank variant
-      int countOfElite = 10;
-      output.AppendLine($"Rank variant E={countOfElite}");
+      Type variant = Type.Evaporation;
 
-      CVRP algorithm = new CVRP(maxIter, 0.75, 5, 5, filepath, Type.Rank, countOfElite);
+      //rank variant - countOfElite
+      //evaporation variant - extra evaporation factor
+      int modificationFactor = 10;
+      if (variant == Type.Rank)
+        output.AppendLine($"Count of Elite = {modificationFactor}");
+      else
+        output.AppendLine($"Evaporation theta = {modificationFactor}");
+
+      CVRP algorithm = new CVRP(maxIter, 0.75, 5, 5, filepath, Type.Rank, modificationFactor);
       var solution = algorithm.Run(output);
       Console.Write(solution);
 
@@ -60,7 +66,8 @@ namespace CVRP
         solution = algorithm.Run(output);
         Console.WriteLine(solution);
       }
-      string path = @"..\..\Instances\SetA\Results\" + file + "[" + countOfElite + "][iter" + maxIter + "].txt";
+      string variantDirectory = variant == Type.Rank ? @"Rank\" : @"Evaporation\";
+      string path = @"..\..\Instances\SetA\Results\" + variantDirectory + file + "[" + modificationFactor + "][iter" + maxIter + "].txt";
 
       //overwrite
       output.AppendLine(File.ReadLines(solutionDirectory + file + ".sol").Last());
