@@ -79,11 +79,9 @@ namespace CVRP
 	    CountOfVertices = GraphState.vertexCount;
 	    CountOfAnts = CountOfVertices - 1;
 	    Generator = new Random(123);
-      if (variant == Type.Rank)
-      {
-        Variant = (Type)variant;
-        ModificationFactor = (int)modificationFactor;
-      }
+      Variant = (Type)variant;
+      ModificationFactor = (int)modificationFactor;
+
 	}
 
 	  public Solution Run(StringBuilder output)
