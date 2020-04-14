@@ -33,11 +33,11 @@ namespace CVRP
     /// <param name="args"></param>
     static void Main(string[] args)
     {
-	  int perInstanceExec = 3;
-      int maxIter = 10000;
+	  int perInstanceExec = 10;
+      int maxIter = 5000;
 	  double evaporationFactor = 0.75;
-	  Type variant = Type.Evaporation;	  
-	  int modificationFactor = 80;
+	  Type variant = Type.Rank;	  
+	  int modificationFactor = 10;
 	  string problemDirectory = @"..\..\Instances\SetA\FewProblems\";
       string solutionDirectory = @"..\..\Instances\SetA\Solutions\";
 	  var tasks = new List<Task>();
@@ -50,13 +50,16 @@ namespace CVRP
 		  //to save solutions in file
 		  var file = Path.GetFileName(filepath).Split('.')[0];
 		  StringBuilder output = PrepareOutputString(maxIter, modificationFactor, variant, file);
+		  StringBuilder outputLocals = PrepareOutputString(maxIter, modificationFactor, variant, "loc_" + file);
 
 		  CVRP algorithm = new CVRP(maxIter, evaporationFactor, 5, 5, filepath, i, variant, modificationFactor);
-		  var solution = algorithm.Run(output);
+		  var solution = algorithm.Run(output, outputLocals);
 		  //Console.Write(solution);
 
 		  string path = PreparePath(maxIter, variant, file, modificationFactor, i);
-		  tasks.Add(Task.Run(SaveResults(output, solutionDirectory, file, path)));  //overwrites
+		  string pathLocal = PreparePath(maxIter, variant, "loc_" + file, modificationFactor, i);
+		  tasks.Add(Task.Run(SaveResults(output, solutionDirectory, file, path, true)));  //overwrites
+		  tasks.Add(Task.Run(SaveResults(outputLocals, solutionDirectory, file, pathLocal, false)));  //overwrites
 		} 
 	  }
 	  Task.WaitAll(tasks.ToArray());
@@ -98,11 +101,12 @@ namespace CVRP
 	  return path;
 	}
 
-	public static Action SaveResults(StringBuilder output, string solutionDirectory, string file, string path)
+	public static Action SaveResults(StringBuilder output, string solutionDirectory, string file, string path, bool best)
 	{
 	  return new Action(() => {
+		if(best)
 		  output.AppendLine(File.ReadLines(solutionDirectory + file + ".sol").Last());
-		  File.WriteAllText(path, output.ToString());
+		File.WriteAllText(path, output.ToString());
 	  });
 	}
   }
