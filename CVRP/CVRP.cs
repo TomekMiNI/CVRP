@@ -67,6 +67,7 @@ namespace CVRP
     /// </summary>
     private double Step { get; }
     private Random Generator { get; }
+    private double ConstW { get; set; }
     
 
     public CVRP(int maxIter, double evaporationFactor, double alpha, double beta, string filePath,int generatorSeed, Type? variant = Type.Basic, int? countOfElite = 10)
@@ -100,6 +101,8 @@ namespace CVRP
 
         if (bestSolution == null || minLocalSolution.Value < bestSolution.Value)
         {
+          if (bestSolution == null)
+            ConstW = minLocalSolution.Value;
           bestSolution = minLocalSolution;
           better = true;
         }
@@ -213,7 +216,6 @@ namespace CVRP
 
 	public void UpdatePheromones(Solution[] solutions)
     {
-      double constW = CountOfAnts; //??
       Graph pheromonesIncrease = new Graph(CountOfVertices);
       int countToUpdate = solutions.Count();
       double evaporationFactor = EvaporationFactor;
@@ -235,7 +237,7 @@ namespace CVRP
         {
           foreach (var edge in route.Edges)
           {
-            double val = constW / solutions[i].Value;
+            double val = ConstW / solutions[i].Value;
 			pheromonesIncrease[edge.V1, edge.V2].Pheromone += val;
           }
         }
