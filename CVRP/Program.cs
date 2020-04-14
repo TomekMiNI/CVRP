@@ -35,7 +35,7 @@ namespace CVRP
     {
 	  int perInstanceExec = 10;
       int maxIter = 5000;
-	  double evaporationFactor = 0.75;
+	  double evaporationFactor = 0.5;
 	  Type variant = Type.Rank;	    
 	  int countOfElite = 10;
 
