@@ -60,16 +60,16 @@ namespace CVRP
     private Type Variant { get; set; } = Type.Basic;
     /// <summary>
     /// Rank Variant - count of elite
-    /// Evaporationa Variant - evaporation extra factor
     /// </summary>
-    private int ModificationFactor { get; }
-	private Random Generator { get; }
+    private int CountOfElite { get; }
+    /// <summary>
+    /// Evaporationa Variant - evaporation step per iteration
+    /// </summary>
+    private double Step { get; }
+    private Random Generator { get; }
+    
 
-    //modifications
-    private Type AlgorithmType { get; }
-    private int CountOfRankAnts { get; }
-
-    public CVRP(int maxIter, double evaporationFactor, double alpha, double beta, string filePath,int generatorSeed, Type? variant = Type.Basic, int? modificationFactor = 10)
+    public CVRP(int maxIter, double evaporationFactor, double alpha, double beta, string filePath,int generatorSeed, Type? variant = Type.Basic, int? countOfElite = 10)
     {
       MaxIter = maxIter;
       EvaporationFactor = evaporationFactor;
@@ -80,7 +80,8 @@ namespace CVRP
 	  CountOfAnts = CountOfVertices - 1;
 	  Generator = new Random(generatorSeed);
       Variant = (Type)variant;
-      ModificationFactor = (int)modificationFactor;
+      CountOfElite = (int)countOfElite;
+      Step = 0.25 / maxIter;
 	}
 
 	  public Solution Run(StringBuilder output)
@@ -216,15 +217,14 @@ namespace CVRP
       double evaporationFactor = EvaporationFactor;
       if(Variant == Type.Rank)
       {
-        countToUpdate = ModificationFactor;
+        countToUpdate = CountOfElite;
         var solutionsList = solutions.ToList();
         solutionsList.Sort();
         solutions = solutionsList.ToArray();
       }
       if(Variant == Type.Evaporation)
       {
-        double average = solutions.Sum(s => s.Value) / solutions.Count();
-        evaporationFactor += ModificationFactor / average;
+        evaporationFactor += Step;
       }
       //leaving pheromone
       for(int i = 0; i < countToUpdate; i++)

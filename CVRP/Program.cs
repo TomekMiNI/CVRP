@@ -35,9 +35,9 @@ namespace CVRP
     {
 	  int perInstanceExec = 3;
       int maxIter = 10000;
-	  double evaporationFactor = 0.75;
+	  double evaporationFactor = 0.5;
 	  Type variant = Type.Evaporation;	  
-	  int modificationFactor = 80;
+	  int countOfElite = 80;
 	  string problemDirectory = @"..\..\Instances\SetA\FewProblems\";
       string solutionDirectory = @"..\..\Instances\SetA\Solutions\";
 	  var tasks = new List<Task>();
@@ -49,13 +49,13 @@ namespace CVRP
 		{
 		  //to save solutions in file
 		  var file = Path.GetFileName(filepath).Split('.')[0];
-		  StringBuilder output = PrepareOutputString(maxIter, modificationFactor, variant, file);
+		  StringBuilder output = PrepareOutputString(maxIter, countOfElite, variant, file);
 
-		  CVRP algorithm = new CVRP(maxIter, evaporationFactor, 5, 5, filepath, i, variant, modificationFactor);
+		  CVRP algorithm = new CVRP(maxIter, evaporationFactor, 5, 5, filepath, i, variant, countOfElite);
 		  var solution = algorithm.Run(output);
 		  //Console.Write(solution);
 
-		  string path = PreparePath(maxIter, variant, file, modificationFactor, i);
+		  string path = PreparePath(maxIter, variant, file, countOfElite, i);
 		  tasks.Add(Task.Run(SaveResults(output, solutionDirectory, file, path)));  //overwrites
 		} 
 	  }
@@ -72,8 +72,8 @@ namespace CVRP
 	  //evaporation variant - extra evaporation factor
 	  if (variant == Type.Rank)
 		output.AppendLine($"Count of Elite = {modificationFactor}");
-	  else
-		output.AppendLine($"Evaporation theta = {modificationFactor}");
+	 // else
+		//output.AppendLine($"Evaporation theta = {modificationFactor}");
 	  return output;
 	}
 
@@ -84,12 +84,14 @@ namespace CVRP
 	  {
 		case Type.Basic:
 		  variantDirectory = @"Basic\";
-		  break;
+      modificationFactor = 0;
+      break;
 		case Type.Rank:
 		  variantDirectory = @"Rank\";
 		  break;
 		case Type.Evaporation:
 		  variantDirectory = @"Evaporation\";
+      modificationFactor = 0;
 		  break;
 		default:
 		  throw new ArgumentException();
