@@ -1,0 +1,6 @@
+A-n48-k7
+Max iterations = 10000
+Evaporation theta = 80
+1 1285.33084192075
+4 1276.95882773824
+cost 1073

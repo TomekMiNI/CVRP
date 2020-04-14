@@ -35,10 +35,11 @@ namespace CVRP
     {
 	  int perInstanceExec = 10;
       int maxIter = 5000;
-	  double evaporationFactor = 0.75;
-	  Type variant = Type.Rank;	  
-	  int modificationFactor = 10;
-	  string problemDirectory = @"..\..\Instances\SetA\FewProblems\";
+	  double evaporationFactor = 0.5;
+	  Type variant = Type.Rank;	    
+	  int countOfElite = 10;
+
+      string problemDirectory = @"..\..\Instances\SetA\FewProblems\";
       string solutionDirectory = @"..\..\Instances\SetA\Solutions\";
 	  var tasks = new List<Task>();
 	  var files = Directory.GetFiles(problemDirectory, "*.vrp", SearchOption.TopDirectoryOnly);
@@ -49,15 +50,16 @@ namespace CVRP
 		{
 		  //to save solutions in file
 		  var file = Path.GetFileName(filepath).Split('.')[0];
-		  StringBuilder output = PrepareOutputString(maxIter, modificationFactor, variant, file);
-		  StringBuilder outputLocals = PrepareOutputString(maxIter, modificationFactor, variant, "loc_" + file);
 
-		  CVRP algorithm = new CVRP(maxIter, evaporationFactor, 5, 5, filepath, i, variant, modificationFactor);
+		  StringBuilder output = PrepareOutputString(maxIter, countOfElite, variant, file);
+		  StringBuilder outputLocals = PrepareOutputString(maxIter, countOfElite, variant, "loc_" + file);
+
+		  CVRP algorithm = new CVRP(maxIter, evaporationFactor, 5, 5, filepath, i, variant, countOfElite);
 		  var solution = algorithm.Run(output, outputLocals);
 		  //Console.Write(solution);
 
-		  string path = PreparePath(maxIter, variant, file, modificationFactor, i);
-		  string pathLocal = PreparePath(maxIter, variant, "loc_" + file, modificationFactor, i);
+		  string path = PreparePath(maxIter, variant, file, countOfElite, i);
+		  string pathLocal = PreparePath(maxIter, variant, "loc_" + file, countOfElite, i);
 		  tasks.Add(Task.Run(SaveResults(output, solutionDirectory, file, path, true)));  //overwrites
 		  tasks.Add(Task.Run(SaveResults(outputLocals, solutionDirectory, file, pathLocal, false)));  //overwrites
 		} 
@@ -75,8 +77,8 @@ namespace CVRP
 	  //evaporation variant - extra evaporation factor
 	  if (variant == Type.Rank)
 		output.AppendLine($"Count of Elite = {modificationFactor}");
-	  else
-		output.AppendLine($"Evaporation theta = {modificationFactor}");
+	 // else
+		//output.AppendLine($"Evaporation theta = {modificationFactor}");
 	  return output;
 	}
 
@@ -87,12 +89,14 @@ namespace CVRP
 	  {
 		case Type.Basic:
 		  variantDirectory = @"Basic\";
-		  break;
+      modificationFactor = 0;
+      break;
 		case Type.Rank:
 		  variantDirectory = @"Rank\";
 		  break;
 		case Type.Evaporation:
 		  variantDirectory = @"Evaporation\";
+      modificationFactor = 0;
 		  break;
 		default:
 		  throw new ArgumentException();
