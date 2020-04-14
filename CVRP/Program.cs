@@ -33,51 +33,77 @@ namespace CVRP
     /// <param name="args"></param>
     static void Main(string[] args)
     {
-      //to save solutions in file
-      StringBuilder output = new StringBuilder();
-      string problemDirectory = @"..\..\Instances\SetA\Problems\";
+	  int perInstanceExec = 3;
+      int maxIter = 10000;
+	  double evaporationFactor = 0.75;
+	  Type variant = Type.Evaporation;	  
+	  int modificationFactor = 80;
+	  string problemDirectory = @"..\..\Instances\SetA\FewProblems\";
       string solutionDirectory = @"..\..\Instances\SetA\Solutions\";
-      string file = "A-n80-k10";
-      string fileWithExtension = file + ".vrp";
-      string filepath = problemDirectory + fileWithExtension;
-      output.AppendLine(file);
+	  var tasks = new List<Task>();
+	  var files = Directory.GetFiles(problemDirectory, "*.vrp", SearchOption.TopDirectoryOnly);
 
-      bool baseVariant = true;
-      int maxIter = 2000;
-      output.AppendLine($"Max iterations = {maxIter}");
-      Type variant = Type.Evaporation;
+	  for (int i = 0; i < perInstanceExec; i++)
+	  {
+		foreach (var filepath in files)
+		{
+		  //to save solutions in file
+		  var file = Path.GetFileName(filepath).Split('.')[0];
+		  StringBuilder output = PrepareOutputString(maxIter, modificationFactor, variant, file);
 
-      //rank variant - countOfElite
-      //evaporation variant - extra evaporation factor
-      int modificationFactor = 10;
-      if (variant == Type.Rank)
-        output.AppendLine($"Count of Elite = {modificationFactor}");
-      else
-        output.AppendLine($"Evaporation theta = {modificationFactor}");
+		  CVRP algorithm = new CVRP(maxIter, evaporationFactor, 5, 5, filepath, i, variant, modificationFactor);
+		  var solution = algorithm.Run(output);
+		  //Console.Write(solution);
 
-      CVRP algorithm = new CVRP(maxIter, 0.75, 5, 5, filepath, Type.Rank, modificationFactor);
-      var solution = algorithm.Run(output);
-      Console.Write(solution);
-
-      if (baseVariant)
-      {
-        output.AppendLine("Base variant");
-        algorithm = new CVRP(maxIter, 0.75, 5, 5, filepath);
-        solution = algorithm.Run(output);
-        Console.WriteLine(solution);
-      }
-      string variantDirectory = variant == Type.Rank ? @"Rank\" : @"Evaporation\";
-      string path = @"..\..\Instances\SetA\Results\" + variantDirectory + file + "[" + modificationFactor + "][iter" + maxIter + "].txt";
-
-      //overwrite
-      output.AppendLine(File.ReadLines(solutionDirectory + file + ".sol").Last());
-      File.WriteAllText(path, output.ToString());
-      
+		  string path = PreparePath(maxIter, variant, file, modificationFactor, i);
+		  tasks.Add(Task.Run(SaveResults(output, solutionDirectory, file, path)));  //overwrites
+		} 
+	  }
+	  Task.WaitAll(tasks.ToArray());
     }
 
-    static void ReadFromFile(string path)
-    {
+	private static StringBuilder PrepareOutputString(int maxIter, int modificationFactor, Type variant, string file)
+	{
+	  StringBuilder output = new StringBuilder();
+	  output.AppendLine(file);
+	  output.AppendLine($"Max iterations = {maxIter}");
 
-    }
+	  //rank variant - countOfElite
+	  //evaporation variant - extra evaporation factor
+	  if (variant == Type.Rank)
+		output.AppendLine($"Count of Elite = {modificationFactor}");
+	  else
+		output.AppendLine($"Evaporation theta = {modificationFactor}");
+	  return output;
+	}
+
+	private static string PreparePath(int maxIter, Type variant, string file, int modificationFactor, int iterationNumber)
+	{
+	  string variantDirectory;
+	  switch (variant)
+	  {
+		case Type.Basic:
+		  variantDirectory = @"Basic\";
+		  break;
+		case Type.Rank:
+		  variantDirectory = @"Rank\";
+		  break;
+		case Type.Evaporation:
+		  variantDirectory = @"Evaporation\";
+		  break;
+		default:
+		  throw new ArgumentException();
+	  }
+	  string path = @"..\..\Instances\SetA\Results\" + variantDirectory + file + "[" + modificationFactor + "][iter" + maxIter + "]["+ iterationNumber +"].txt";
+	  return path;
+	}
+
+	public static Action SaveResults(StringBuilder output, string solutionDirectory, string file, string path)
+	{
+	  return new Action(() => {
+		  output.AppendLine(File.ReadLines(solutionDirectory + file + ".sol").Last());
+		  File.WriteAllText(path, output.ToString());
+	  });
+	}
   }
 }

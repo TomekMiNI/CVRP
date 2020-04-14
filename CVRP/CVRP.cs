@@ -69,19 +69,18 @@ namespace CVRP
     private Type AlgorithmType { get; }
     private int CountOfRankAnts { get; }
 
-    public CVRP(int maxIter, double evaporationFactor, double alpha, double beta, string filePath, Type? variant = Type.Basic, int? modificationFactor = 10)
+    public CVRP(int maxIter, double evaporationFactor, double alpha, double beta, string filePath,int generatorSeed, Type? variant = Type.Basic, int? modificationFactor = 10)
     {
       MaxIter = maxIter;
       EvaporationFactor = evaporationFactor;
       Alpha = alpha;
       Beta = beta;
-	    (GraphState, Capacity) = Utilities.ReadInputCvrp(filePath);
-	    CountOfVertices = GraphState.vertexCount;
-	    CountOfAnts = CountOfVertices - 1;
-	    Generator = new Random(123);
+	  (GraphState, Capacity) = Utilities.ReadInputCvrp(filePath);
+	  CountOfVertices = GraphState.vertexCount;
+	  CountOfAnts = CountOfVertices - 1;
+	  Generator = new Random(generatorSeed);
       Variant = (Type)variant;
       ModificationFactor = (int)modificationFactor;
-
 	}
 
 	  public Solution Run(StringBuilder output)
@@ -104,11 +103,11 @@ namespace CVRP
           better = true;
         }
 
-		    UpdatePheromones(solutions);
+		UpdatePheromones(solutions);
         if (better)
         {
-          string sol = $"{i + 1} {bestSolution}";
-          Console.Write(sol);
+          string sol = $"{i + 1} {bestSolution}" + Environment.NewLine;
+          //Console.Write(sol);
           output.Append(sol);
         }
         better = false;
@@ -235,7 +234,7 @@ namespace CVRP
           foreach (var edge in route.Edges)
           {
             double val = constW / solutions[i].Value;
-			      pheromonesIncrease[edge.V1, edge.V2].Pheromone += val;
+			pheromonesIncrease[edge.V1, edge.V2].Pheromone += val;
           }
         }
       }

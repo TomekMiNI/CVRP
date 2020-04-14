@@ -121,10 +121,10 @@ namespace CVRP
 
     public override string ToString()
     {
-      StringBuilder sb = new StringBuilder();
-      //Routes.ForEach(r => sb.AppendLine(r.ToString()));
-	    sb.AppendLine("Best solution value: " + Value.ToString());
-      return sb.ToString();
+	  //   StringBuilder sb = new StringBuilder();
+	  ////Routes.ForEach(r => sb.AppendLine(r.ToString()));
+	  //sb.AppendLine(" " + );
+      return Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
   }
   
