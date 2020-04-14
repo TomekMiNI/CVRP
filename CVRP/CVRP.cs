@@ -84,7 +84,7 @@ namespace CVRP
       Step = 0.25 / maxIter;
 	}
 
-	  public Solution Run(StringBuilder output)
+	  public Solution Run(StringBuilder output, StringBuilder localBests)
     {
 	    Solution bestSolution = null;
       bool better = false;
@@ -105,7 +105,9 @@ namespace CVRP
         }
 
 		UpdatePheromones(solutions);
-        if (better)
+		localBests.Append($"{i+1} {minLocalSolution}" + Environment.NewLine);
+
+		if (better)
         {
           string sol = $"{i + 1} {bestSolution}" + Environment.NewLine;
           //Console.Write(sol);

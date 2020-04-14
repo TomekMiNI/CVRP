@@ -33,12 +33,13 @@ namespace CVRP
     /// <param name="args"></param>
     static void Main(string[] args)
     {
-	  int perInstanceExec = 3;
-      int maxIter = 10000;
-	  double evaporationFactor = 0.5;
-	  Type variant = Type.Evaporation;	  
-	  int countOfElite = 80;
-	  string problemDirectory = @"..\..\Instances\SetA\FewProblems\";
+	  int perInstanceExec = 10;
+      int maxIter = 5000;
+	  double evaporationFactor = 0.75;
+	  Type variant = Type.Rank;	    
+	  int countOfElite = 10;
+
+      string problemDirectory = @"..\..\Instances\SetA\FewProblems\";
       string solutionDirectory = @"..\..\Instances\SetA\Solutions\";
 	  var tasks = new List<Task>();
 	  var files = Directory.GetFiles(problemDirectory, "*.vrp", SearchOption.TopDirectoryOnly);
@@ -49,14 +50,18 @@ namespace CVRP
 		{
 		  //to save solutions in file
 		  var file = Path.GetFileName(filepath).Split('.')[0];
+
 		  StringBuilder output = PrepareOutputString(maxIter, countOfElite, variant, file);
+		  StringBuilder outputLocals = PrepareOutputString(maxIter, countOfElite, variant, "loc_" + file);
 
 		  CVRP algorithm = new CVRP(maxIter, evaporationFactor, 5, 5, filepath, i, variant, countOfElite);
-		  var solution = algorithm.Run(output);
+		  var solution = algorithm.Run(output, outputLocals);
 		  //Console.Write(solution);
 
 		  string path = PreparePath(maxIter, variant, file, countOfElite, i);
-		  tasks.Add(Task.Run(SaveResults(output, solutionDirectory, file, path)));  //overwrites
+		  string pathLocal = PreparePath(maxIter, variant, "loc_" + file, countOfElite, i);
+		  tasks.Add(Task.Run(SaveResults(output, solutionDirectory, file, path, true)));  //overwrites
+		  tasks.Add(Task.Run(SaveResults(outputLocals, solutionDirectory, file, pathLocal, false)));  //overwrites
 		} 
 	  }
 	  Task.WaitAll(tasks.ToArray());
@@ -100,11 +105,12 @@ namespace CVRP
 	  return path;
 	}
 
-	public static Action SaveResults(StringBuilder output, string solutionDirectory, string file, string path)
+	public static Action SaveResults(StringBuilder output, string solutionDirectory, string file, string path, bool best)
 	{
 	  return new Action(() => {
+		if(best)
 		  output.AppendLine(File.ReadLines(solutionDirectory + file + ".sol").Last());
-		  File.WriteAllText(path, output.ToString());
+		File.WriteAllText(path, output.ToString());
 	  });
 	}
   }
