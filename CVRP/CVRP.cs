@@ -36,7 +36,7 @@ namespace CVRP
     /// <summary>
     /// Evaporation factor
     /// </summary>
-    private double EvaporationFactor { get; }
+    private double EvaporationFactor { get; set; }
     /// <summary>
     /// Each ant has the same capacity
     /// </summary>
@@ -82,7 +82,7 @@ namespace CVRP
 	  Generator = new Random(generatorSeed);
       Variant = (Type)variant;
       CountOfElite = (int)countOfElite;
-      Step = 0.25 / maxIter;
+      Step = 0.25 / (maxIter/2);
 	}
 
 	  public Solution Run(StringBuilder output, StringBuilder localBests)
@@ -228,7 +228,8 @@ namespace CVRP
       }
       if(Variant == Type.Evaporation)
       {
-        evaporationFactor += Step;
+		if (EvaporationFactor < 0.75) 
+		  EvaporationFactor += Step;
       }
       //leaving pheromone
       for(int i = 0; i < countToUpdate; i++)

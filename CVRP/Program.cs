@@ -34,9 +34,9 @@ namespace CVRP
     static void Main(string[] args)
     {
 	  int perInstanceExec = 10;
-      int maxIter = 5000;
+      int maxIter = 10000;
 	  double evaporationFactor = 0.5;
-	  Type variant = Type.Rank;	    
+	  Type variant = Type.Evaporation;	    
 	  int countOfElite = 10;
 
       string problemDirectory = @"..\..\Instances\SetA\FewProblems\";
