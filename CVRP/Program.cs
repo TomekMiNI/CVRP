@@ -36,7 +36,7 @@ namespace CVRP
 	  int perInstanceExec = 10;
       int maxIter = 10000;
 	  double evaporationFactor = 0.5;
-	  Type variant = Type.Rank;	    
+	  Type variant = Type.Greedy;	    
 	  int countOfElite = 10;
 
       string problemDirectory = @"..\..\Instances\SetA\FewProblems\";
@@ -44,18 +44,19 @@ namespace CVRP
 	  var tasks = new List<Task>();
 	  var files = Directory.GetFiles(problemDirectory, "*.vrp", SearchOption.TopDirectoryOnly);
 
-	  for (int i = 0; i < perInstanceExec; i++)
+      if (variant == Type.Greedy)
+        perInstanceExec = 1;
+      for (int i = 0; i < perInstanceExec; i++)
 	  {
 		foreach (var filepath in files)
 		{
 		  //to save solutions in file
 		  var file = Path.GetFileName(filepath).Split('.')[0];
           //rank
-          variant = Type.Rank;
 		  StringBuilder output = PrepareOutputString(maxIter, countOfElite, variant, file);
 		  StringBuilder outputLocals = PrepareOutputString(maxIter, countOfElite, variant, "loc_" + file);
 
-		  CVRP algorithm = new CVRP(maxIter, evaporationFactor, 5, 5, filepath, i, variant, countOfElite);
+		  CVRP algorithm = new CVRP(maxIter, evaporationFactor, 5, 5, filepath, i, variant);
 		  var solution = algorithm.Run(output, outputLocals);
 		  //Console.Write(solution);
 
@@ -65,18 +66,18 @@ namespace CVRP
 		  tasks.Add(Task.Run(SaveResults(outputLocals, solutionDirectory, file, pathLocal, false)));  //overwrites
 
       //base
-          variant = Type.Basic;
-          StringBuilder output2 = PrepareOutputString(maxIter, countOfElite, variant, file);
-          StringBuilder outputLocals2 = PrepareOutputString(maxIter, countOfElite, variant, "loc_" + file);
+      //variant = Type.Basic;
+      //StringBuilder output2 = PrepareOutputString(maxIter, countOfElite, variant, file);
+      //StringBuilder outputLocals2 = PrepareOutputString(maxIter, countOfElite, variant, "loc_" + file);
 
-          algorithm = new CVRP(maxIter, evaporationFactor, 5, 5, filepath, i, variant, countOfElite);
-          solution = algorithm.Run(output2, outputLocals2);
-          //Console.Write(solution);
+      //algorithm = new CVRP(maxIter, evaporationFactor, 5, 5, filepath, i, variant, countOfElite);
+      //solution = algorithm.Run(output2, outputLocals2);
+      ////Console.Write(solution);
 
-          string path2 = PreparePath(maxIter, variant, file, countOfElite, i);
-          string pathLocal2 = PreparePath(maxIter, variant, "loc_" + file, countOfElite, i);
-          tasks.Add(Task.Run(SaveResults(output2, solutionDirectory, file, path2, true)));  //overwrites
-          tasks.Add(Task.Run(SaveResults(outputLocals2, solutionDirectory, file, pathLocal2, false)));  //overwrites
+      //string path2 = PreparePath(maxIter, variant, file, countOfElite, i);
+      //string pathLocal2 = PreparePath(maxIter, variant, "loc_" + file, countOfElite, i);
+      //tasks.Add(Task.Run(SaveResults(output2, solutionDirectory, file, path2, true)));  //overwrites
+      //tasks.Add(Task.Run(SaveResults(outputLocals2, solutionDirectory, file, pathLocal2, false)));  //overwrites
           
         } 
 	  }
@@ -114,7 +115,11 @@ namespace CVRP
 		  variantDirectory = @"Evaporation\";
       modificationFactor = 0;
 		  break;
-		default:
+    case Type.Greedy:
+      variantDirectory = @"Greedy\";
+      modificationFactor = 0;
+      break;
+    default:
 		  throw new ArgumentException();
 	  }
 	  string path = @"..\..\Instances\SetA\Results\" + variantDirectory + file + "[" + modificationFactor + "][iter" + maxIter + "]["+ iterationNumber +"].txt";

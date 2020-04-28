@@ -10,7 +10,8 @@ namespace CVRP
   {
     Basic,
     Rank,
-    Evaporation
+    Evaporation,
+    Greedy
   }
   class CVRP
   {
@@ -28,7 +29,7 @@ namespace CVRP
     /// <summary>
     /// Max number of iterations
     /// </summary>
-    private int MaxIter { get; }
+    private int MaxIter { get; set; }
     /// <summary>
     /// Count of ants
     /// </summary>
@@ -90,6 +91,8 @@ namespace CVRP
 	    Solution bestSolution = null;
       bool better = false;
       //MAX_ITER iterations
+      if (Variant == Type.Greedy)
+        MaxIter = 1;
       for (int i = 0; i < MaxIter; i++)
       {
         var solutions = new Solution[CountOfAnts];
@@ -135,26 +138,40 @@ namespace CVRP
       Route route = new Route();
 
       while(alreadyVisited < CountOfVertices - 1)
-	  {
-		  double[] rouletteWheel = CalculateProbabilities(alreadyVisitedArr, start, currentCapacity);
-		  int nextVertex = CountOfVertices - 1;
-		  if (rouletteWheel != null)
-		  {
-		    var p = Generator.NextDouble();
-		    for (int i = 0; i < CountOfVertices; i++)
-		    {
-			    if (p < rouletteWheel[i])
-			    {
-			      nextVertex = i;
-			      break;
-			    }
-		    }
-		  }
-		  else
-		  {
-		    nextVertex = 0;
-		  }
-		
+      {
+        int nextVertex = CountOfVertices - 1;
+        if (Variant == Type.Greedy)
+        {
+          nextVertex = 0;
+          double minDistance = double.MaxValue;
+          for(int i = 0; i < CountOfVertices; i++)
+            if(!alreadyVisitedArr[i] && i != start)
+              if(GraphState[start, i].Distance < minDistance)
+              {
+                minDistance = GraphState[start, i].Distance;
+                nextVertex = i;
+              }
+        }
+        else
+        {
+          double[] rouletteWheel = CalculateProbabilities(alreadyVisitedArr, start, currentCapacity);
+          if (rouletteWheel != null)
+          {
+            var p = Generator.NextDouble();
+            for (int i = 0; i < CountOfVertices; i++)
+            {
+              if (p < rouletteWheel[i])
+              {
+                nextVertex = i;
+                break;
+              }
+            }
+          }
+          else
+          {
+            nextVertex = 0;
+          }
+        }
 
 		//next vertice chosen
 		route.Add(new Edge(start, nextVertex, GraphState[start, nextVertex].Distance, 0));
