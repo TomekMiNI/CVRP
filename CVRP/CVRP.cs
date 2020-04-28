@@ -145,7 +145,7 @@ namespace CVRP
           nextVertex = 0;
           double minDistance = double.MaxValue;
           for(int i = 0; i < CountOfVertices; i++)
-            if(!alreadyVisitedArr[i] && i != start)
+            if(!alreadyVisitedArr[i] && i != start && GraphState[i] <= currentCapacity)
               if(GraphState[start, i].Distance < minDistance)
               {
                 minDistance = GraphState[start, i].Distance;
